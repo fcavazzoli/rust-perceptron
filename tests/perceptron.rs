@@ -14,7 +14,7 @@ fn test_perceptron() {
     ];
 
     for (inputs, target) in training_data.iter() {
-        p.train(inputs, *target);
+        p.train(inputs, *target, Some(6));
     }
 
     let truncated = format!("{:.5}", p.bias);

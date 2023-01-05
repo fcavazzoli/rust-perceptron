@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 pub struct Perceptron {
     pub weights: Vec<f64>,
     pub bias: f64,
@@ -13,13 +14,26 @@ impl Perceptron {
         }
     }
 
-    fn feedforward(&self, inputs: &[f64]) -> f64 {
-        let sum = (0..self.weights.len()).fold(0.0, |acc, i| acc + inputs[i] * self.weights[i]);
+    fn feedforward(&self, inputs: &[f64], num_cores: Option<usize>) -> f64 {
+        let mut sum = 0.0;
+        let thread_pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(num_cores.unwrap_or(1))
+            .build()
+            .unwrap();
+
+        thread_pool.install(|| {
+            sum = (0..self.weights.len())
+                .into_par_iter()
+                .map(|i| inputs[i] * self.weights[i])
+                .sum::<f64>();
+        });
+
+        // let sum = (0..self.weights.len()).fold(0.0, |acc, i| acc + inputs[i] * self.weights[i]);
         sum + self.bias
     }
 
-    pub fn train(&mut self, inputs: &[f64], target: f64) {
-        let guess = self.feedforward(inputs);
+    pub fn train(&mut self, inputs: &[f64], target: f64, num_cores: Option<usize>) {
+        let guess = self.feedforward(inputs, num_cores);
         let error = target - guess;
 
         (0..self.weights.len()).for_each(|i| {
@@ -30,6 +44,6 @@ impl Perceptron {
     }
 
     pub fn predict(&self, inputs: &[f64]) -> f64 {
-        self.feedforward(inputs).signum()
+        self.feedforward(inputs, None).signum()
     }
 }
