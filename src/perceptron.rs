@@ -33,8 +33,3 @@ impl Perceptron {
         self.feedforward(inputs).signum()
     }
 }
-
-#[cfg(tests)]
-mod perceptron_test {
-    use super::*;
-}
