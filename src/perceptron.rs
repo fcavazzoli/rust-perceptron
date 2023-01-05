@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 use rayon::prelude::*;
 pub struct Perceptron {
     pub weights: Vec<f64>,
