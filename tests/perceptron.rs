@@ -1,7 +1,6 @@
 #![feature(test)]
 
 use rust_perceptron::perceptron::Perceptron;
-extern crate test;
 
 #[test]
 fn test_perceptron() {
