@@ -1,6 +1,6 @@
 #![feature(test)]
 
-use rust_perceptron::perceptron::Perceptron;
+use rust_perceptron::perceptron::{OptionalParams, Perceptron};
 
 fn truncate(number: f64, decimals: usize) -> f64 {
     let truncated = format!("{:.1$}", number, decimals);
@@ -19,14 +19,14 @@ fn test_perceptron() {
     ];
 
     for (inputs, target) in training_data.iter() {
-        p.train(inputs, *target, Some(6));
+        p.train(inputs, *target, &[OptionalParams::NumCores(1)]);
     }
 
     assert_eq!(truncate(p.bias, 5), 0.17720);
     assert_eq!(truncate(p.weights[0], 5), 0.16720);
     assert_eq!(truncate(p.weights[1], 5), 0.17820);
-    assert_eq!(p.predict(&[0.0, 0.0]), 1.0);
-    assert_eq!(p.predict(&[0.0, 1.0]), 1.0);
-    assert_eq!(p.predict(&[1.0, 0.0]), 1.0);
-    assert_eq!(p.predict(&[1.0, 1.0]), 1.0);
+    assert_eq!(p.predict(&[0.0, 0.0], &[]), 1.0);
+    assert_eq!(p.predict(&[0.0, 1.0], &[]), 1.0);
+    assert_eq!(p.predict(&[1.0, 0.0], &[]), 1.0);
+    assert_eq!(p.predict(&[1.0, 1.0], &[]), 1.0);
 }

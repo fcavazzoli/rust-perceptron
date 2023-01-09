@@ -1,4 +1,28 @@
 use rayon::prelude::*;
+
+pub enum OptionalParams {
+    NumCores(usize),
+}
+
+struct DefaultParams {
+    num_cores: usize,
+}
+
+impl DefaultParams {
+    fn new() -> Self {
+        DefaultParams { num_cores: 1 }
+    }
+
+    fn unpack(optional_args: &[OptionalParams]) -> Self {
+        let mut default_params = DefaultParams::new();
+        for opt in optional_args {
+            match opt {
+                OptionalParams::NumCores(num_cores) => default_params.num_cores = *num_cores,
+            }
+        }
+        default_params
+    }
+}
 pub struct Perceptron {
     pub weights: Vec<f64>,
     pub bias: f64,
@@ -14,11 +38,12 @@ impl Perceptron {
         }
     }
 
-    fn feedforward(&self, inputs: &[f64], num_cores: Option<usize>) -> f64 {
+    fn feedforward(&self, inputs: &[f64], optional_args: &[OptionalParams]) -> f64 {
+        let default_params = DefaultParams::unpack(optional_args);
         let mut sum = 0.0;
 
         let thread_pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_cores.unwrap_or(1))
+            .num_threads(default_params.num_cores)
             .build()
             .unwrap();
 
@@ -32,11 +57,13 @@ impl Perceptron {
         sum + self.bias
     }
 
-    pub fn train(&mut self, inputs: &[f64], target: f64, num_cores: Option<usize>) {
-        let guess = self.feedforward(inputs, num_cores);
+    pub fn train(&mut self, inputs: &[f64], target: f64, optional_args: &[OptionalParams]) {
+        let default_params = DefaultParams::unpack(optional_args);
+
+        let guess = self.feedforward(inputs, optional_args);
         let error = target - guess;
 
-        let num_cores = num_cores.unwrap_or(rayon::max_num_threads());
+        let num_cores = default_params.num_cores;
         let mut chunk_size = self.weights.len() / num_cores;
         if chunk_size < 1 {
             chunk_size = 1;
@@ -56,7 +83,7 @@ impl Perceptron {
         self.bias += error * self.learning_rate;
     }
 
-    pub fn predict(&self, inputs: &[f64]) -> f64 {
-        self.feedforward(inputs, None).signum()
+    pub fn predict(&self, inputs: &[f64], optional_args: &[OptionalParams]) -> f64 {
+        self.feedforward(inputs, optional_args).signum()
     }
 }
